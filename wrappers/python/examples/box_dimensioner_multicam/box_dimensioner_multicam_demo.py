@@ -32,9 +32,9 @@ def run_demo():
 	frame_rate = 15  # fps
 	dispose_frames_for_stablisation = 30  # frames
 	
-	chessboard_width = 6 # squares
+	chessboard_width = 7 # squares
 	chessboard_height = 9 	# squares
-	square_size = 0.0253 # meters
+	square_size = 0.02 # meters
 
 	try:
 		# Enable the streams from all the intel realsense devices
@@ -60,6 +60,7 @@ def run_demo():
 		"""
 		# Get the intrinsics of the realsense device 
 		intrinsics_devices = device_manager.get_device_intrinsics(frames)
+		print('intrinsics_devices', intrinsics_devices)
 		
                 # Set the chessboard parameters for calibration 
 		chessboard_params = [chessboard_height, chessboard_width, square_size] 
@@ -69,7 +70,9 @@ def run_demo():
 		while calibrated_device_count < len(device_manager._available_devices):
 			frames = device_manager.poll_frames()
 			pose_estimator = PoseEstimation(frames, intrinsics_devices, chessboard_params)
+			print('pose_estimator', pose_estimator)
 			transformation_result_kabsch  = pose_estimator.perform_pose_estimation()
+			print('transformation_result_kabsch', transformation_result_kabsch)
 			object_point = pose_estimator.get_chessboard_corners_in3d()
 			calibrated_device_count = 0
 			for device in device_manager._available_devices:
@@ -83,6 +86,7 @@ def run_demo():
 		chessboard_points_cumulative_3d = np.array([-1,-1,-1]).transpose()
 		for device in device_manager._available_devices:
 			transformation_devices[device] = transformation_result_kabsch[device][1].inverse()
+			print('transformation_devices', transformation_devices[device])
 			points3D = object_point[device][2][:,object_point[device][3]]
 			points3D = transformation_devices[device].apply_transformation(points3D)
 			chessboard_points_cumulative_3d = np.column_stack( (chessboard_points_cumulative_3d,points3D) )
@@ -116,6 +120,7 @@ def run_demo():
 		for calibration_info in (transformation_devices, intrinsics_devices, extrinsics_devices):
 			for key, value in calibration_info.items():
 				calibration_info_devices[key].append(value)
+				print('calibration_info_devices', calibration_info_devices[key])
 
 		# Continue acquisition until terminated with Ctrl+C by the user
 		while 1:
